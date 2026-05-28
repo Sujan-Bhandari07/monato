@@ -1,0 +1,18 @@
+import express from "express"
+import { addmenu, addresturant, addreview, getallresturant, getresturantbyid, openorclose } from "../controller/resturantcontroller.js"
+import upload from "../middlewares/multer.js"
+import { authmiddleware } from "../middlewares/auth.js"
+
+const resturantrouter = express.Router()
+
+
+
+resturantrouter.post("/addresturant",authmiddleware,upload.fields([{name:"image",maxCount:1}]),addresturant)
+
+resturantrouter.post("/addreview",authmiddleware,addreview)
+resturantrouter.post("/additem",upload.fields([{name:"image",maxCount:1}]),addmenu)
+resturantrouter.post("/getresturantbyid",getresturantbyid)
+resturantrouter.post("/getallresturant",getallresturant)
+resturantrouter.post("/openclose",openorclose)
+
+export { resturantrouter }

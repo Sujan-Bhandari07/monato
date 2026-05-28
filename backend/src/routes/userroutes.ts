@@ -1,0 +1,18 @@
+import express from "express"
+import { checkresetotp, getuser, newpassword, resetotp, signin, signout, signup, updateprofile } from "../controller/usercontroller.js"
+import { authmiddleware } from "../middlewares/auth.js"
+import upload from "../middlewares/multer.js"
+
+const userrouter = express.Router()
+
+
+userrouter.post("/sign-up",upload.fields([{name:"profilepic",maxCount:1}]),signup)
+userrouter.post("/sign-in",signin)
+userrouter.post("/sign-out",signout)
+userrouter.post("/newpassword",newpassword)
+userrouter.post("/updateprofile",upload.fields([{name:"profilepic",maxCount:1}]),authmiddleware,updateprofile)
+userrouter.post("/sendresetotp",resetotp)
+userrouter.post("/checkresetotp",checkresetotp)
+userrouter.get("/getuser",authmiddleware,getuser)
+
+export {userrouter}
