@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { FaUpload } from "react-icons/fa";
-import { useLoginMutation, useRegisterMutation, useSendresetotpMutation } from "../services/Userapi";
+import { useCheckresetotpMutation, useLoginMutation, useNewpassMutation, useRegisterMutation, useSendresetotpMutation } from "../services/Userapi";
 import toast from "react-hot-toast";
 import { IoArrowBackOutline } from "react-icons/io5";
 import { useAppDispatch, useAppSelector } from "../utils/Hooks";
@@ -16,11 +16,14 @@ interface ILogin {
   password: string;
   fullName: string;
   role: string;
-  otp:string
+  confirmpass:string,
+  otp:string,
+  newpass:string;
   profilepic: File | null;
 }
 
 const Login = () => {
+  const [isnew, setisnew] = useState(false)
 
   const [isregister, setIsregister] = useState(false)
   const [Forget, setForget] = useState(false)
@@ -30,7 +33,14 @@ const Login = () => {
   const dispatch = useAppDispatch()
 
 
+  const[checkotp,{data:cd,error:ce,isError:cie,isSuccess:cis,isLoading:cil}]= useCheckresetotpMutation()
 
+  const[newpass,{data:nd,error:ne,isError:nie,isSuccess:nis,isLoading:nil}]= useNewpassMutation()
+
+
+
+ 
+  
 
   const[sendotp,{data:sd,error:se,isError:sie,isSuccess:sis,isLoading:sil}]= useSendresetotpMutation()
  
@@ -41,10 +51,15 @@ const Login = () => {
     email: "",
     password: "",
     fullName: "",
+    newpass:"",
+    confirmpass:"",
+
     otp:"",
     role: "",
     profilepic: null,
   });
+
+  console.log(form)
 
   const handleform = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, files, type } = e.target;
@@ -55,7 +70,7 @@ const Login = () => {
   };
 
   const handleclick = async()=>{
-    if(!isregister && !Forget){
+    if(!isregister && !Forget &&!isnew){
       const a=await login({
         email:form.email,
         password:form.password
@@ -63,9 +78,12 @@ const Login = () => {
       if(a.success){
         setform({
           email: "",
+  confirmpass:"",
+
     password: "",
     fullName: "",
     role: "",
+    newpass:"",
     otp:"",
     profilepic: null,
         })
@@ -75,7 +93,7 @@ const Login = () => {
 
     
 
-if(isregister && !Forget){
+if(isregister && !Forget &&!isnew){
 
   const formData = new FormData();
   
@@ -98,6 +116,9 @@ if(isregister && !Forget){
       fullName: "",
       otp:"",
       role: "",
+      newpass:"",
+  confirmpass:"",
+
       profilepic: null,
     })
     return
@@ -106,7 +127,43 @@ if(isregister && !Forget){
 
   
 
+if(Forget && !isnew){
+  const a= await checkotp({otp:form.otp,email:user.email}).unwrap()
+  if(a.success){
+    setform({
+      email: "",
+password: "",
+fullName: "",
+role: "",
+newpass:"",
+otp:"",
+confirmpass:"",
 
+profilepic: null,
+    })
+    setForget(false)
+    setisnew(true)
+
+  }
+}
+
+if(isnew){
+  const a=await newpass({email:user.email,newpassword:form.password,confirmpass:form.newpass}).unwrap()
+  if(a.success)
+    {
+      setform({
+        email: "",
+  password: "",
+  fullName: "",
+  role: "",
+  newpass:"",
+  otp:"",
+  confirmpass:"",
+  
+  profilepic: null,
+      })
+  }
+}
 
 
   
@@ -118,13 +175,16 @@ if(isregister && !Forget){
       password: "",
       fullName: "",
       role: "",
+  confirmpass:"",
+
+      newpass:"",
       otp:"",
       profilepic: null,})
     setIsregister(prev=>!prev)
   }
 
   const handleleft=async()=>{
-    if(!isregister ){
+    if(!isregister && !Forget && !isnew ){
 
       const a= await sendotp({email:user.email}).unwrap()
       if(a.success){
@@ -137,6 +197,12 @@ if(isregister && !Forget){
         setIsregister(false)
       }
 
+      if(!Forget && isnew){
+        setisnew(false)
+        setForget(false)
+        setIsregister(false)
+      }
+
 
     
 
@@ -144,7 +210,7 @@ if(isregister && !Forget){
   }
 
   useEffect(() => {
-    let id;
+    let id:string| undefined;
 
     if(sis){
       toast.success(sd.message)
@@ -167,8 +233,59 @@ if(isregister && !Forget){
 
 
 
+
   useEffect(() => {
-    let id;
+    let id:string| undefined;
+
+    if(nis){
+      toast.success(nd.message)
+
+      
+    }
+    if(nil){
+      id=toast.loading("Loading")
+    }
+    if(nie && ne && "data" in ne){
+      const err=ne.data as IError
+      toast.error(err.message)
+    }
+  
+    return () => {
+      if(id)toast.dismiss(id)
+    }
+  }, [nd,nis,nie,ne,nil])
+
+
+
+
+
+
+  useEffect(() => {
+    let id:string| undefined;
+
+    if(cis){
+      toast.success(cd.message)
+
+      
+    }
+    if(cil){
+      id=toast.loading("Loading")
+    }
+    if(cie && ce && "data" in ce){
+      const err=ce.data as IError
+      toast.error(err.message)
+    }
+  
+    return () => {
+      if(id)toast.dismiss(id)
+    }
+  }, [cd,cis,cie,ce,cil])
+
+
+
+
+  useEffect(() => {
+    let id:string|undefined;
 
     if(ris){
       toast.success(rd.message)
@@ -189,7 +306,7 @@ if(isregister && !Forget){
   }, [rd,ris,rie,re,ril,dispatch])
 
   useEffect(() => {
-    let id;
+    let id:string|undefined;
 
     if(lis){
       toast.success(ld.message)
@@ -216,9 +333,9 @@ if(isregister && !Forget){
   return (
     <div className="login h-screen w-screen flex justify-center items-center">
       <div className="   rounded-xl h-120 w-100 flex  items-center flex-col gap-3">
-        <h2 className="text-4xl  font-bold">{isregister && !Forget?"   SIGN UP":!isregister&&!Forget ?"SIGN IN":Forget && "OTP"  }</h2>
+        <h2 className="text-4xl  font-bold">{isregister && !Forget &&!isnew?"   SIGN UP":!isregister&&!Forget&&!isnew ?"SIGN IN":Forget && !isnew ? "OTP":isnew&&"NEW PASSWORD"  }</h2>
         <div className="flex flex-col gap-4 w-full h-full">
-          {!Forget &&<input
+          {!Forget && !isnew &&<input
             className="in h-10 border border-black rounded"
             type="email"
             placeholder="Enter your email"
@@ -238,9 +355,20 @@ if(isregister && !Forget){
 
           {!Forget &&<input
             type="password"
-            placeholder="Enter your password"
+            placeholder={` ${!isnew ? "Enter your password":"Enter new password"}`}
             name="password"
             value={form.password}
+            onChange={handleform}
+            className="in h-10 border border-black rounded"
+          />}
+
+
+
+{ isnew &&<input
+            type="password"
+            placeholder="Confirm password"
+            name="newpass"
+            value={form.newpass}
             onChange={handleform}
             className="in h-10 border border-black rounded"
           />}
@@ -322,15 +450,15 @@ if(isregister && !Forget){
 
           
           <div className="flex justify-between">
-            <div onClick={handleleft} className={`${!isregister&&"hover:text-blue-700 cursor-pointer"} `}> {!isregister && !Forget ? "Forget password":isregister && !Forget ? "Already have account":<IoArrowBackOutline size={20} />}</div>
-            <div onClick={handleright} className="cursor-pointer hover:text-blue-700 ">{!isregister && !Forget?"Create account":isregister && !Forget&&"Log in"}</div>
+            <div onClick={handleleft} className={`${!isregister&&"hover:text-blue-700 cursor-pointer"} `}> {!isregister && !Forget &&!isnew ? "Forget password":isregister && !Forget &&!isnew ? "Already have account":<IoArrowBackOutline size={20} />}</div>
+            <div onClick={handleright} className="cursor-pointer hover:text-blue-700 ">{!isregister && !Forget && !isnew?"Create account":isregister&&!isnew && !Forget&&"Log in"}</div>
           </div>
 
           
           
           <div className="w-full flex justify-center  ">
             <button onClick={handleclick} className="outline-none px-2 cursor-pointer  rounded text-[2.5vh] bg-black text-white">
-           {isregister && !Forget?"   Sign up":!isregister && !Forget?"Sign in":"Send"}
+           {isregister && !Forget &&!isnew?"   Sign up":!isregister && !Forget &&!isnew?"Sign in":"Send"}
             </button>
           </div>
         </div>

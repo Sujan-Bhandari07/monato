@@ -167,8 +167,8 @@ const checkresetotp = tryCatch(async (req, res) => {
     return success(res, "Otp verified");
 });
 const newpassword = tryCatch(async (req, res) => {
-    const { newpassword, email } = req.body;
-    if (!newpassword) {
+    const { newpassword, email, confirmpass } = req.body;
+    if (!newpassword && !confirmpass) {
         return err(res, "Enter new password");
     }
     if (!email) {
@@ -177,6 +177,9 @@ const newpassword = tryCatch(async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) {
         return err(res, "User not found");
+    }
+    if (newpassword !== confirmpass) {
+        return err(res, "New password and confirm doesnot match.");
     }
     if (!validator.isStrongPassword(newpassword)) {
         return err(res, "Pls enter strong password");

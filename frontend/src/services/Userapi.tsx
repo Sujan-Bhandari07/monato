@@ -35,12 +35,33 @@ export const userapi = createApi({
     })
   }),
 
+  checkresetotp:builder.mutation({
+    query:(data)=>({
+      url: "api/v1/user/checkresetotp",
+      method: "POST",
+      body: data,
+    })
+  }),
+
+
+  newpass:builder.mutation({
+    query:(data)=>({
+      url: "api/v1/user/newpassword",
+      method: "POST",
+      body: data,
+    })
+  }),
+
+
+
+
+
     // another api
   }),
 });
 
 export const {
 
-  useRegisterMutation,useLoginMutation,useSendresetotpMutation
+  useRegisterMutation,useLoginMutation,useNewpassMutation,useSendresetotpMutation,useCheckresetotpMutation
 
 } = userapi;
